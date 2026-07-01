@@ -1,0 +1,27 @@
+# GalaxEye SAR-to-EO Image Translation -- Training Configuration
+
+# Dataset
+dataset_path: "/kaggle/working/SEN1-2/ROIs1868_summer"   # update to your local path
+num_scenes: 58                                           # number of s1_i/s2_i scene folders to scan
+
+# Image / model
+image_size: 256
+
+# Training hyperparameters
+batch_size: 16
+num_epochs: 50
+learning_rate: 0.0002
+beta1: 0.5
+beta2: 0.999
+lambda_l1: 100
+
+# Reproducibility
+random_seed: 42
+
+# System
+num_workers: 2
+pin_memory: true
+
+# Output paths
+checkpoint_dir: "checkpoints"
+output_dir: "outputs"
