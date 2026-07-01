@@ -1,0 +1,69 @@
+"""
+SEN1-2 paired SAR/RGB dataset and dataloader utilities.
+"""
+
+import os
+
+from PIL import Image
+from torch.utils.data import Dataset
+from torchvision import transforms
+
+
+sar_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize([0.5], [0.5])
+])
+
+rgb_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+])
+
+
+class SEN12Dataset(Dataset):
+    """Paired SAR (grayscale) / RGB dataset built from a list of (sar_path, rgb_path) tuples."""
+
+    def __init__(self, pairs):
+        self.pairs = pairs
+
+    def __len__(self):
+        return len(self.pairs)
+
+    def __getitem__(self, idx):
+        sar_path, rgb_path = self.pairs[idx]
+
+        sar = Image.open(sar_path).convert("L")
+        rgb = Image.open(rgb_path).convert("RGB")
+
+        sar = sar_transform(sar)
+        rgb = rgb_transform(rgb)
+
+        return sar, rgb
+
+
+def build_pairs(dataset_path, num_scenes=58):
+    """
+    Walk the s1_i / s2_i folder structure of the SEN1-2 (ROIs1868_summer) layout
+    and return a list of (sar_path, rgb_path) tuples for co-registered patches.
+    """
+    pairs = []
+
+    for i in range(num_scenes):
+        s1_folder = os.path.join(dataset_path, f"s1_{i}")
+        s2_folder = os.path.join(dataset_path, f"s2_{i}")
+
+        if not (os.path.exists(s1_folder) and os.path.exists(s2_folder)):
+            continue
+
+        sar_files = sorted(os.listdir(s1_folder))
+
+        for sar_file in sar_files:
+            rgb_file = sar_file.replace("_s1_", "_s2_")
+
+            sar_path = os.path.join(s1_folder, sar_file)
+            rgb_path = os.path.join(s2_folder, rgb_file)
+
+            if os.path.exists(rgb_path):
+                pairs.append((sar_path, rgb_path))
+
+    return pairs
